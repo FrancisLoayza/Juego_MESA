@@ -262,6 +262,7 @@
           <button class="btn" onclick="resetTimerDisplay()">⏮️</button>
         </div>
         <button class="btn defense hidden" id="btnPass" onclick="resolveNoObjection()">🙅 No objeta</button>
+        <button class="btn hidden" id="btnCancel" onclick="cancelFiscaliaCard()">🔙 Elegir otra carta</button>
       </div>
       <div class="slot" id="slotDefensa"><div class="slot-placeholder">Zona de respuesta de Defensa</div></div>
     </div>
@@ -483,16 +484,26 @@ function renderSlots(){
   const slotF = document.getElementById('slotFiscalia');
   const slotD = document.getElementById('slotDefensa');
   const btnPass = document.getElementById('btnPass');
+  const btnCancel = document.getElementById('btnCancel');
   if(!state.cardInPlay){
     slotF.innerHTML = '<div class="slot-placeholder">Zona de ataque de Fiscalía</div>';
     slotD.innerHTML = '<div class="slot-placeholder">Zona de respuesta de Defensa</div>';
     btnPass.classList.add('hidden');
+    btnCancel.classList.add('hidden');
     return;
   }
   const f = FISCALIA.find(x=>x.id===state.cardInPlay);
   slotF.innerHTML = cardHTML(f,{size:'lg', enPosicion:'ATAQUE'});
   slotD.innerHTML = '<div class="slot-placeholder">Esperando respuesta de Defensa…</div>';
   btnPass.classList.remove('hidden');
+  btnCancel.classList.remove('hidden');
+}
+
+function cancelFiscaliaCard(){
+  state.cardInPlay = null;
+  state.pendingD = null;
+  pauseTimer();
+  renderAll();
 }
 
 function renderLP(){
