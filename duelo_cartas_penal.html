@@ -10,7 +10,6 @@
     --bg:#0b0f14; --panel:#182433; --texto:#eef3f9; --oro:#e8c15c;
     --verde:#1f9d55; --amarillo:#d6a92c; --gris:#4a5a6e;
     --tipo-pericial:#8a4fd1; --tipo-testimonial:#d18a4f; --tipo-documental:#3fae8a;
-    --tipo-procesal:#4f7fd1; --tipo-indiciaria:#8a8a8a;
   }
   *{box-sizing:border-box;}
   body{margin:0; font-family:"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--texto);}
@@ -103,14 +102,10 @@
   .rcard.type-pericial .rcard-art{background:radial-gradient(circle,#4a2c74,#241436);}
   .rcard.type-testimonial .rcard-art{background:radial-gradient(circle,#74502c,#362314);}
   .rcard.type-documental .rcard-art{background:radial-gradient(circle,#215c47,#12281f);}
-  .rcard.type-procesal .rcard-art{background:radial-gradient(circle,#213f5c,#122130);}
-  .rcard.type-indiciaria .rcard-art{background:radial-gradient(circle,#4a4a4a,#232323);}
   .rcard-type{font-size:.62rem; text-align:center; padding:2px; font-weight:bold; color:#fff;}
   .rcard.type-pericial .rcard-type{background:var(--tipo-pericial);}
   .rcard.type-testimonial .rcard-type{background:var(--tipo-testimonial);}
   .rcard.type-documental .rcard-type{background:var(--tipo-documental);}
-  .rcard.type-procesal .rcard-type{background:var(--tipo-procesal);}
-  .rcard.type-indiciaria .rcard-type{background:var(--tipo-indiciaria);}
   .rcard-desc{font-size:.6rem; line-height:1.25; padding:4px 6px; opacity:.85; flex-shrink:0; max-height:56px; overflow:hidden;}
   .rcard.sm .rcard-desc{display:none;}
   .rcard-stats{display:flex; justify-content:space-around; padding:4px; background:rgba(0,0,0,.4); font-size:.72rem; font-weight:bold;}
@@ -189,7 +184,7 @@
       <div class="welcome-role azul"><h3>🔵 Defensa</h3>Responde con cartas trampa y argumenta el fundamento legal en voz alta.</div>
     </div>
     <div class="welcome-steps">
-      🎴 Cada carta es un tipo distinto de prueba (pericial, testimonial, documental, procesal).<br>
+      🎴 Cada carta es un tipo distinto de prueba (pericial, testimonial o documental).<br>
       ⚔️ Fiscalía siempre ataca; Defensa debe <b>elegir la carta correcta</b> — si se equivoca, pierde puntos de vida.<br>
       🧑‍⚖️ El profesor decide en vivo si el argumento jurídico es válido.<br>
       🏆 Gana quien sostenga su teoría del caso — ¡o quien rompa las pruebas ancla del caso!
@@ -215,7 +210,7 @@
   1. Arriba del tapete está la <b>mano de Fiscalía</b>: el profesor toca una carta para "atacar" con ella (aparece en el carril izquierdo del campo de batalla, siempre de pie = posición de ATAQUE).<br>
   2. Abajo está la <b>mano de Defensa</b>: <b>todas las cartas disponibles se pueden jugar</b>, no se marca cuál es la correcta. Los estudiantes deben razonar y elegir la carta cuya vulnerabilidad realmente coincide con la prueba activa.<br>
   3. Si eligen una carta que <b>no aplica</b> contra esa prueba, es una jugada inválida automática: la Defensa pierde <b>400 LP</b> de penalización, esa carta no se gasta y pueden intentar con otra mientras haya tiempo.<br>
-  4. Si la carta elegida sí aplica, se abre la evaluación del profesor. Si es 🔬 Pericial o 🗣️ Testimonial se coloca <b>de pie (ATAQUE)</b>; si es 📄 Documental o ⚖️ Procesal se coloca <b>acostada (DEFENSA)</b> — igual que en un juego de cartas de mesa real.<br>
+  4. Si la carta elegida sí aplica, se abre la evaluación del profesor. Si es 🔬 Pericial o 🗣️ Testimonial se coloca <b>de pie (ATAQUE)</b>; si es 📄 Documental se coloca <b>acostada (DEFENSA)</b> — igual que en un juego de cartas de mesa real.<br>
   5. El profesor escucha el argumento oral y pulsa ✅ (válido) o ❌ (insuficiente). El sistema calcula el combate (ATK vs DEF o ATK vs ATK) y reparte daño a los puntos de vida (LP).<br>
   6. Ambos bandos inician con 1200 LP. Si Defensa acumula errores (penalizaciones + ataques directos + combates perdidos), sus LP bajan rápido y <b>Fiscalía gana en pocos turnos</b>. Gana Defensa si Fiscalía llega a 0 LP, o si se rompen 2 de las 3 pruebas ⚓ ancla (balística, residuos de disparo, declaración sin abogado).
   <table>
@@ -223,7 +218,6 @@
     <tr><td>🔬 Pericial</td><td>De pie — ATAQUE</td></tr>
     <tr><td>🗣️ Testimonial</td><td>De pie — ATAQUE</td></tr>
     <tr><td>📄 Documental</td><td>Acostada — DEFENSA</td></tr>
-    <tr><td>⚖️ Procesal/Constitucional</td><td>Acostada — DEFENSA</td></tr>
   </table>
 </div>
 
@@ -300,8 +294,8 @@
 
 <script>
 // ---------- ICONS / RULES ----------
-const TIPO_ICON = {Pericial:'🔬', Testimonial:'🗣️', Documental:'📄', Procesal:'⚖️', Indiciaria:'🧩'};
-const TIPO_POSICION = {Pericial:'ATAQUE', Testimonial:'ATAQUE', Documental:'DEFENSA', Procesal:'DEFENSA', Indiciaria:'DEFENSA'};
+const TIPO_ICON = {Pericial:'🔬', Testimonial:'🗣️', Documental:'📄'};
+const TIPO_POSICION = {Pericial:'ATAQUE', Testimonial:'ATAQUE', Documental:'DEFENSA'};
 
 // ---------- DATA ----------
 const FISCALIA = [
@@ -333,7 +327,7 @@ const FISCALIA = [
    detalle:'Anuncian que Villamar iba a separar a Salazar de la gerencia y evaluar acciones legales.',
    vulnerabilidad:'Solo prueba móvil/motivo, no autoría material; existe otro sospechoso con motivo y medios.',
    articulo:'Art. 454 COIP — pertinencia; debe valorarse también la hipótesis alternativa.', ancla:false, targets:['D7']},
-  {id:'F8', nombre:'Escena sin forzamiento ni robo', tipo:'Indiciaria', atk:1000, arte:'🚪',
+  {id:'F8', nombre:'Escena sin forzamiento ni robo', tipo:'Documental', atk:1000, arte:'🚪',
    detalle:'Se descarta el móvil de robo simple por ausencia de forzamiento.',
    vulnerabilidad:'Solo descarta una hipótesis (robo); no identifica al autor ni excluye el ingreso de terceros.',
    articulo:'Art. 5 num. 4 COIP — in dubio pro reo.', ancla:false, targets:['D6']},
@@ -344,13 +338,13 @@ const FISCALIA = [
 ];
 
 const DEFENSA = [
-  {id:'D1', nombre:'Vacío de cadena de custodia', tipo:'Procesal', def:2000, arte:'📦',
+  {id:'D1', nombre:'Vacío de cadena de custodia', tipo:'Documental', def:2000, arte:'📦',
    detalle:'El arma estuvo 8h10 en un vehículo policial SIN responsable de custodia registrado.',
    articulo:'Art. 455-456 COIP — ruptura de cadena de custodia invalida la prueba material.'},
-  {id:'D2', nombre:'Allanamiento sin orden judicial', tipo:'Procesal', def:2500, arte:'🚔',
+  {id:'D2', nombre:'Allanamiento sin orden judicial', tipo:'Documental', def:2500, arte:'🚔',
    detalle:'Registro del domicilio/vehículo con solo autorización verbal telefónica, regularizada 46h después.',
    articulo:'Art. 76 num. 4 CRE — prueba obtenida con violación de derechos carece de validez.'},
-  {id:'D3', nombre:'Declaración sin abogado presente', tipo:'Procesal', def:2200, arte:'⚖️',
+  {id:'D3', nombre:'Declaración sin abogado presente', tipo:'Testimonial', atk:2200, arte:'⚖️',
    detalle:'La versión de Salazar en sede policial se tomó sin abogado; perito psicológico forense lo confirma.',
    articulo:'Art. 76.7 lit. g/h CRE — derecho a la defensa técnica.'},
   {id:'D4', nombre:'Coartada del restaurante', tipo:'Testimonial', atk:1800, arte:'🍽️',
