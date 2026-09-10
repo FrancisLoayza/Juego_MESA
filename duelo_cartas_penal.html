@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duelo de Cartas Penal — Proceso N.° 06283-2026-00147</title>
+<style>
+  :root{
+    --rojo:#a5231f; --rojo-d:#7a1815; --azul:#1c4a86; --azul-d:#123156;
+    --bg:#0b0f14; --panel:#182433; --texto:#eef3f9; --oro:#e8c15c;
+    --verde:#1f9d55; --amarillo:#d6a92c; --gris:#4a5a6e;
+    --tipo-pericial:#8a4fd1; --tipo-testimonial:#d18a4f; --tipo-documental:#3fae8a;
+    --tipo-procesal:#4f7fd1; --tipo-indiciaria:#8a8a8a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--texto);}
+  header{background:linear-gradient(90deg,var(--rojo-d),var(--azul-d)); padding:12px 24px; text-align:center; border-bottom:4px solid #000;}
+  header h1{margin:0; font-size:1.5rem;}
+  header p{margin:4px 0 0; font-size:.85rem; opacity:.85;}
+
+  .toolbar{text-align:center; padding:8px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap;}
+  .btn{background:#20304a; color:var(--texto); border:1px solid #3a4a60; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:.9rem;}
+  .btn:hover{filter:brightness(1.25);}
+  .btn.primary{background:var(--rojo); border-color:var(--rojo-d);}
+  .btn.defense{background:var(--azul); border-color:var(--azul-d);}
+  button:disabled{opacity:.3; cursor:not-allowed;}
+
+  .rules{font-size:.82rem; line-height:1.5; background:#182433; border-radius:10px; padding:12px 16px; margin:0 auto 8px; max-width:1100px;}
+  .rules table{width:100%; border-collapse:collapse; margin-top:6px; font-size:.78rem;}
+  .rules td, .rules th{border:1px solid #3a4a60; padding:4px 8px; text-align:center;}
+  .hidden{display:none !important;}
+
+  .lp-bar-wrap{display:flex; justify-content:center; gap:24px; padding:6px; flex-wrap:wrap;}
+  .lp-box{background:#182433; border-radius:10px; padding:6px 18px; min-width:220px; text-align:center; border:2px solid #3a4a60;}
+  .lp-box.rojo{border-color:var(--rojo);} .lp-box.azul{border-color:var(--azul);}
+  .lp-box .lp-title{font-weight:bold; font-size:.85rem;}
+  .lp-box .lp-num{font-size:1.6rem; font-weight:bold;}
+  .lp-track{height:10px; border-radius:6px; background:#0a0f16; overflow:hidden; margin-top:2px;}
+  .lp-fill{height:100%; transition:width .4s ease;}
+  .lp-box.rojo .lp-fill{background:var(--rojo);} .lp-box.azul .lp-fill{background:var(--azul);}
+
+  .anchor-status{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:4px 0;}
+  .anchor-pill{padding:3px 10px; border-radius:20px; font-size:.72rem; background:var(--gris);}
+  .anchor-pill.hit{background:var(--verde);}
+
+  .lp-toast-wrap{display:flex; justify-content:center; padding:0 12px;}
+  .lp-toast{
+    max-width:640px; width:100%; text-align:center; font-size:.85rem; font-weight:600; padding:0 14px;
+    border-radius:10px; opacity:0; max-height:0; overflow:hidden; transition:opacity .3s ease, max-height .3s ease, padding .3s ease;
+  }
+  .lp-toast.show{opacity:1; max-height:60px; padding:8px 14px;}
+  .lp-toast.rojo{background:rgba(165,35,31,.35); border:1px solid var(--rojo);}
+  .lp-toast.azul{background:rgba(28,74,134,.35); border:1px solid var(--azul);}
+
+  /* ---------- MESA (tabletop) ---------- */
+  .mesa-marco{
+    max-width:1300px; margin:10px auto; padding:14px; border-radius:22px;
+    background:linear-gradient(160deg,#5b3a22,#3a2414); box-shadow:0 10px 30px rgba(0,0,0,.6);
+  }
+  .mesa-fieltro{
+    border-radius:16px; padding:18px; background:radial-gradient(ellipse at center, #1f5c3a 0%, #123825 75%, #0c2418 100%);
+    border:3px solid #0c2418;
+  }
+  .zona-label{text-align:center; font-weight:bold; letter-spacing:1px; font-size:.8rem; opacity:.85; margin-bottom:6px; text-transform:uppercase;}
+  .mano{display:flex; gap:10px; overflow-x:auto; padding:6px 4px 12px; justify-content:flex-start;}
+  .mano.centrado{justify-content:center; flex-wrap:wrap;}
+
+  .campo-batalla{display:flex; align-items:center; justify-content:center; gap:26px; padding:14px 0; flex-wrap:wrap;}
+  .slot{
+    width:190px; min-height:270px; border:2px dashed rgba(255,255,255,.25); border-radius:14px;
+    display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.15);
+  }
+  .slot .slot-placeholder{opacity:.55; font-size:.8rem; text-align:center; padding:10px;}
+  .vs-mid{display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .vs-icon{font-size:1.8rem;}
+  #timerDisplay{font-size:2.2rem; font-weight:bold; font-variant-numeric:tabular-nums;}
+  .timer-bar{height:8px; width:140px; border-radius:6px; background:#0a0f16; overflow:hidden;}
+  .timer-fill{height:100%; width:100%; background:var(--verde); transition:width .3s linear, background .3s;}
+  .timer-controls{display:flex; gap:4px; flex-wrap:wrap; justify-content:center; margin-top:4px;}
+  .timer-controls input{width:52px;}
+
+  /* ---------- REAL CARD ---------- */
+  .rcard{
+    border-radius:12px; border:3px solid var(--oro); background:linear-gradient(160deg,#2a2f38,#181c22);
+    box-shadow:0 4px 10px rgba(0,0,0,.5); display:flex; flex-direction:column; overflow:hidden;
+    transition:transform .2s ease, box-shadow .2s ease; flex-shrink:0; cursor:default;
+  }
+  .rcard.sm{width:130px; height:190px;}
+  .rcard.lg{width:190px; height:270px;}
+  .rcard.clickable{cursor:pointer;}
+  .rcard.clickable:hover{transform:translateY(-8px); box-shadow:0 12px 20px rgba(0,0,0,.6);}
+  .rcard.disabled{opacity:.35; filter:grayscale(.7); cursor:not-allowed;}
+  .rcard.disabled:hover{transform:none;}
+  .rcard.used-back{
+    background:repeating-linear-gradient(45deg,#2a3140,#2a3140 8px,#222833 8px,#222833 16px);
+    display:flex; align-items:center; justify-content:center; text-align:center; color:#8fa0b8; font-size:.75rem; padding:8px;
+  }
+  .rcard.pos-defensa.en-slot{transform:rotate(90deg);}
+  .rcard-top{padding:3px 34px; font-size:.68rem; font-weight:bold; text-align:center; background:rgba(0,0,0,.35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rcard.sm .rcard-top{padding:3px 26px; font-size:.62rem;}
+  .rcard-art{flex:1; display:flex; align-items:center; justify-content:center; font-size:2.6rem; position:relative;}
+  .rcard.sm .rcard-art{font-size:2rem;}
+  .rcard.type-pericial .rcard-art{background:radial-gradient(circle,#4a2c74,#241436);}
+  .rcard.type-testimonial .rcard-art{background:radial-gradient(circle,#74502c,#362314);}
+  .rcard.type-documental .rcard-art{background:radial-gradient(circle,#215c47,#12281f);}
+  .rcard.type-procesal .rcard-art{background:radial-gradient(circle,#213f5c,#122130);}
+  .rcard.type-indiciaria .rcard-art{background:radial-gradient(circle,#4a4a4a,#232323);}
+  .rcard-type{font-size:.62rem; text-align:center; padding:2px; font-weight:bold; color:#fff;}
+  .rcard.type-pericial .rcard-type{background:var(--tipo-pericial);}
+  .rcard.type-testimonial .rcard-type{background:var(--tipo-testimonial);}
+  .rcard.type-documental .rcard-type{background:var(--tipo-documental);}
+  .rcard.type-procesal .rcard-type{background:var(--tipo-procesal);}
+  .rcard.type-indiciaria .rcard-type{background:var(--tipo-indiciaria);}
+  .rcard-desc{font-size:.6rem; line-height:1.25; padding:4px 6px; opacity:.85; flex-shrink:0; max-height:56px; overflow:hidden;}
+  .rcard.sm .rcard-desc{display:none;}
+  .rcard-stats{display:flex; justify-content:space-around; padding:4px; background:rgba(0,0,0,.4); font-size:.72rem; font-weight:bold;}
+  .rcard-stats .atk{color:#ff8a7a;}
+  .rcard-stats .def{color:#7ab0ff;}
+  .rcard-pos-ribbon{position:absolute; top:3px; right:3px; font-size:.6rem; background:rgba(0,0,0,.7); padding:1px 4px; border-radius:5px; z-index:2; line-height:1.3;}
+  .rcard-ancla{position:absolute; top:3px; left:3px; font-size:.85rem; background:rgba(0,0,0,.7); border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; z-index:2;}
+
+  /* ---------- CARD HOVER PREVIEW ---------- */
+  #cardPreview{
+    position:fixed; z-index:200; display:none; pointer-events:none;
+    width:230px; min-height:300px; filter:drop-shadow(0 10px 25px rgba(0,0,0,.7));
+  }
+  #cardPreview .rcard{width:230px; min-height:300px;}
+  #cardPreview .rcard-top{font-size:.85rem; padding:6px 8px; white-space:normal;}
+  #cardPreview .rcard-art{font-size:3.4rem;}
+  #cardPreview .rcard-type{font-size:.75rem; padding:4px;}
+  #cardPreview .rcard-desc{display:block !important; font-size:.75rem; max-height:none; padding:8px;}
+  #cardPreview .rcard-stats{font-size:.9rem; padding:8px;}
+
+  .side-info{display:flex; gap:16px; padding:0 16px 16px; flex-wrap:wrap; justify-content:center;}
+  .log-panel{background:var(--panel); border-radius:12px; padding:12px; max-width:420px; flex:1; min-width:280px;}
+  .log-panel h2{margin-top:0; font-size:1rem;}
+  .log{max-height:220px; overflow-y:auto; font-size:.8rem;}
+  .log-entry{border-bottom:1px solid #2c3b50; padding:6px 0;}
+  .tag{display:inline-block; padding:2px 8px; border-radius:6px; font-size:.68rem; font-weight:bold; margin-right:6px;}
+  .tag.intact{background:var(--rojo);} .tag.neutralized{background:var(--verde);}
+  .articulo{font-style:italic; opacity:.85; font-size:.75rem;}
+
+  .modal-bg{position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:50;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--panel); border-radius:14px; padding:22px; max-width:520px; width:90%; border:2px solid var(--azul);}
+  .modal .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:16px;}
+
+  .verdict{position:fixed; inset:0; background:rgba(0,0,0,.9); display:none; align-items:center; justify-content:center; flex-direction:column; z-index:60; text-align:center; padding:20px;}
+  .verdict.show{display:flex;}
+  .verdict h1{font-size:2.3rem; margin-bottom:6px;}
+  .verdict.win-fiscalia h1{color:#ff6b5e;} .verdict.win-defensa h1{color:#6ea8ff;}
+
+  /* ---------- WELCOME SCREEN ---------- */
+  .welcome{
+    position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; padding:20px;
+    background:radial-gradient(ellipse at center, #1f5c3a 0%, #0e2a1c 60%, #060f0a 100%);
+  }
+  .welcome.hidden{display:none;}
+  .welcome-card{
+    max-width:640px; width:100%; background:linear-gradient(160deg,#20304a,#141d29); border:3px solid var(--oro);
+    border-radius:20px; padding:32px 28px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.6);
+  }
+  .welcome-card .emoji-row{font-size:2.6rem; margin-bottom:6px;}
+  .welcome-card h1{margin:0 0 6px; font-size:1.7rem;}
+  .welcome-card p.subtitle{margin:0 0 18px; opacity:.85; font-size:.9rem;}
+  .welcome-roles{display:flex; gap:14px; justify-content:center; margin-bottom:18px; flex-wrap:wrap;}
+  .welcome-role{flex:1; min-width:200px; border-radius:14px; padding:14px; font-size:.85rem; text-align:left;}
+  .welcome-role.rojo{background:rgba(165,35,31,.25); border:2px solid var(--rojo);}
+  .welcome-role.azul{background:rgba(28,74,134,.25); border:2px solid var(--azul);}
+  .welcome-role h3{margin:0 0 6px; font-size:1rem;}
+  .welcome-steps{text-align:left; font-size:.82rem; line-height:1.6; background:rgba(0,0,0,.25); border-radius:12px; padding:12px 16px; margin-bottom:20px;}
+  .btn-play{
+    background:linear-gradient(160deg,#e8c15c,#c69a2e); color:#1a1305; border:none; border-radius:14px;
+    padding:16px 36px; font-size:1.2rem; font-weight:bold; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,.4);
+    transition:transform .15s ease;
+  }
+  .btn-play:hover{transform:translateY(-3px) scale(1.03);}
+</style>
+</head>
+<body>
+
+<div class="welcome" id="welcomeScreen">
+  <div class="welcome-card">
+    <div class="emoji-row">⚖️🃏🔫</div>
+    <h1>Duelo de Cartas Penal</h1>
+    <p class="subtitle">Proceso N.° 06283-2026-00147 · Fiscalía General del Estado del Ecuador vs. Andrés Mauricio Salazar Peña</p>
+    <div class="welcome-roles">
+      <div class="welcome-role rojo"><h3>🔴 Fiscalía</h3>Ataca con pruebas de cargo. Elige una carta y declara el ataque.</div>
+      <div class="welcome-role azul"><h3>🔵 Defensa</h3>Responde con cartas trampa y argumenta el fundamento legal en voz alta.</div>
+    </div>
+    <div class="welcome-steps">
+      🎴 Cada carta es un tipo distinto de prueba (pericial, testimonial, documental, procesal).<br>
+      ⚔️ Fiscalía siempre ataca; Defensa debe <b>elegir la carta correcta</b> — si se equivoca, pierde puntos de vida.<br>
+      🧑‍⚖️ El profesor decide en vivo si el argumento jurídico es válido.<br>
+      🏆 Gana quien sostenga su teoría del caso — ¡o quien rompa las pruebas ancla del caso!
+    </div>
+    <button class="btn-play" onclick="startGame()">🎮 ¡Empezar a jugar!</button>
+  </div>
+</div>
+
+<header>
+  <h1>⚖️ Duelo de Cartas Penal — Fiscalía vs. Defensa</h1>
+  <p>Proceso N.° 06283-2026-00147 · Fiscalía General del Estado del Ecuador vs. Andrés Mauricio Salazar Peña · Art. 140 COIP (Asesinato)</p>
+</header>
+
+<div class="toolbar">
+  <button class="btn" onclick="document.getElementById('rulesBox').classList.toggle('hidden')">📋 Reglas</button>
+  <button class="btn" onclick="resetGame()">🔄 Reiniciar partida</button>
+  <button class="btn" onclick="document.getElementById('welcomeScreen').classList.remove('hidden')">🏠 Inicio</button>
+  <button class="btn" onclick="showVerdict()">🏛️ Veredicto final</button>
+</div>
+
+<div id="rulesBox" class="rules hidden">
+  <b>Cómo se juega esta mesa:</b><br>
+  1. Arriba del tapete está la <b>mano de Fiscalía</b>: el profesor toca una carta para "atacar" con ella (aparece en el carril izquierdo del campo de batalla, siempre de pie = posición de ATAQUE).<br>
+  2. Abajo está la <b>mano de Defensa</b>: <b>todas las cartas disponibles se pueden jugar</b>, no se marca cuál es la correcta. Los estudiantes deben razonar y elegir la carta cuya vulnerabilidad realmente coincide con la prueba activa.<br>
+  3. Si eligen una carta que <b>no aplica</b> contra esa prueba, es una jugada inválida automática: la Defensa pierde <b>400 LP</b> de penalización, esa carta no se gasta y pueden intentar con otra mientras haya tiempo.<br>
+  4. Si la carta elegida sí aplica, se abre la evaluación del profesor. Si es 🔬 Pericial o 🗣️ Testimonial se coloca <b>de pie (ATAQUE)</b>; si es 📄 Documental o ⚖️ Procesal se coloca <b>acostada (DEFENSA)</b> — igual que en un juego de cartas de mesa real.<br>
+  5. El profesor escucha el argumento oral y pulsa ✅ (válido) o ❌ (insuficiente). El sistema calcula el combate (ATK vs DEF o ATK vs ATK) y reparte daño a los puntos de vida (LP).<br>
+  6. Ambos bandos inician con 1200 LP. Si Defensa acumula errores (penalizaciones + ataques directos + combates perdidos), sus LP bajan rápido y <b>Fiscalía gana en pocos turnos</b>. Gana Defensa si Fiscalía llega a 0 LP, o si se rompen 2 de las 3 pruebas ⚓ ancla (balística, residuos de disparo, declaración sin abogado).
+  <table>
+    <tr><th>Tipo</th><th>Postura en la mesa</th></tr>
+    <tr><td>🔬 Pericial</td><td>De pie — ATAQUE</td></tr>
+    <tr><td>🗣️ Testimonial</td><td>De pie — ATAQUE</td></tr>
+    <tr><td>📄 Documental</td><td>Acostada — DEFENSA</td></tr>
+    <tr><td>⚖️ Procesal/Constitucional</td><td>Acostada — DEFENSA</td></tr>
+  </table>
+</div>
+
+<div class="lp-bar-wrap">
+  <div class="lp-box rojo">
+    <div class="lp-title">🔴 FISCALÍA — LP</div>
+    <div class="lp-num" id="lpFiscalia">1200</div>
+    <div class="lp-track"><div class="lp-fill" id="lpFiscaliaFill" style="width:100%"></div></div>
+  </div>
+  <div class="lp-box azul">
+    <div class="lp-title">🔵 DEFENSA — LP</div>
+    <div class="lp-num" id="lpDefensa">1200</div>
+    <div class="lp-track"><div class="lp-fill" id="lpDefensaFill" style="width:100%"></div></div>
+  </div>
+</div>
+<div class="lp-toast-wrap"><div class="lp-toast" id="lpToast"></div></div>
+<div class="anchor-status" id="anchorPills"></div>
+
+<div id="cardPreview"></div>
+
+<div class="mesa-marco">
+  <div class="mesa-fieltro">
+    <div class="zona-label">🔴 Mano de Fiscalía</div>
+    <div class="mano" id="fiscaliaMano"></div>
+
+    <div class="campo-batalla">
+      <div class="slot" id="slotFiscalia"><div class="slot-placeholder">Zona de ataque de Fiscalía</div></div>
+      <div class="vs-mid">
+        <div class="vs-icon">⚔️🆚🛡️</div>
+        <div id="timerDisplay">--</div>
+        <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+        <div class="timer-controls">
+          <label style="font-size:.7rem;">Seg: <input type="number" id="timerSeconds" value="40" min="10" max="180"></label>
+          <button class="btn" onclick="startTimer()">▶️</button>
+          <button class="btn" onclick="pauseTimer()">⏸️</button>
+          <button class="btn" onclick="resetTimerDisplay()">⏮️</button>
+        </div>
+        <button class="btn defense hidden" id="btnPass" onclick="resolveNoObjection()">🙅 No objeta</button>
+      </div>
+      <div class="slot" id="slotDefensa"><div class="slot-placeholder">Zona de respuesta de Defensa</div></div>
+    </div>
+
+    <div class="zona-label">🔵 Mano de Defensa</div>
+    <div class="mano centrado" id="defensaMano"></div>
+  </div>
+</div>
+
+<div class="side-info">
+  <div class="log-panel">
+    <h2>📜 Historial del duelo</h2>
+    <div class="log" id="log"><i>Aún no se han jugado cartas.</i></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">Evaluar objeción de Defensa</h3>
+    <p id="modalBody"></p>
+    <p style="font-size:.85rem; opacity:.8;">El profesor escucha el fundamento jurídico argumentado en voz alta y decide:</p>
+    <div class="actions">
+      <button class="btn defense" onclick="confirmObjection(true)">✅ Fundamento válido — Resolver combate</button>
+      <button class="btn primary" onclick="confirmObjection(false)">❌ Insuficiente — Ataque directo</button>
+    </div>
+  </div>
+</div>
+
+<div class="verdict" id="verdictBox">
+  <h1 id="verdictTitle"></h1>
+  <p id="verdictSubtitle" style="font-size:1.2rem; max-width:700px;"></p>
+  <button class="btn" onclick="document.getElementById('verdictBox').classList.remove('show')">Cerrar</button>
+</div>
+
+<script>
+// ---------- ICONS / RULES ----------
+const TIPO_ICON = {Pericial:'🔬', Testimonial:'🗣️', Documental:'📄', Procesal:'⚖️', Indiciaria:'🧩'};
+const TIPO_POSICION = {Pericial:'ATAQUE', Testimonial:'ATAQUE', Documental:'DEFENSA', Procesal:'DEFENSA', Indiciaria:'DEFENSA'};
+
+// ---------- DATA ----------
+const FISCALIA = [
+  {id:'F1', nombre:'Testimonio de Blanca Contreras', tipo:'Testimonial', atk:1500, arte:'🗣️👀',
+   detalle:'Vio a Salazar entrar a las 20h15, escuchó discusión sobre "cuentas" y "Panamá", lo vio salir nervioso a las 20h47.',
+   vulnerabilidad:'Testigo único; no presenció agresión física; posible margen de error en horas.',
+   articulo:'Art. 501 COIP — valor del testimonio como medio de prueba.', ancla:false, targets:['D4','D6']},
+  {id:'F2', nombre:'Registro de acceso vehicular', tipo:'Documental', atk:1500, arte:'🚗',
+   detalle:'El vehículo de Salazar ingresó a las 20h09 y salió a las 20h50.',
+   vulnerabilidad:'No prueba quién conducía y es incompatible con la coartada del restaurante.',
+   articulo:'Art. 499 COIP — prueba documental.', ancla:false, targets:['D4']},
+  {id:'F3', nombre:'Pericia balística', tipo:'Pericial', atk:2000, arte:'🔫',
+   detalle:'Coincidencia "probable" (no identificación positiva) entre el arma hallada en el vehículo y el proyectil.',
+   vulnerabilidad:'Nivel de certeza insuficiente ("probable") y cadena de custodia del arma comprometida.',
+   articulo:'Art. 502 COIP — el informe pericial debe fundamentar conclusiones ciertas, no solo probables.', ancla:true, targets:['D1','D2','D8']},
+  {id:'F4', nombre:'Residuos de disparo (guante de nitrilo)', tipo:'Pericial', atk:2000, arte:'🧤',
+   detalle:'Bario y antimonio en guante hallado en el vehículo; la perito admite no distinguir disparo propio de contacto secundario.',
+   vulnerabilidad:'Hallado en allanamiento sin orden y con cadena de custodia rota; resultado técnico ambiguo.',
+   articulo:'Art. 455-456 COIP — cadena de custodia.', ancla:true, targets:['D1','D2']},
+  {id:'F5', nombre:'Pericia informática (celular y mensaje)', tipo:'Pericial', atk:1500, arte:'📱',
+   detalle:'Celular cerca de la empresa hasta 20h48; mensaje a las 19h58: "Voy a hablar con Jorge de una vez, esto ya no da para más."',
+   vulnerabilidad:'El mensaje es ambiguo, no expresa violencia; contradicho por estado de ánimo tranquilo poco después.',
+   articulo:'Art. 454 num. 6 COIP — valoración integral y contextual de la prueba.', ancla:false, targets:['D5']},
+  {id:'F6', nombre:'Pericia contable (transferencias)', tipo:'Pericial', atk:2000, arte:'💰',
+   detalle:'9 de 11 transferencias irregulares (USD 480.350) autorizadas con la clave de Salazar.',
+   vulnerabilidad:'No se probó quién tecleó físicamente la clave; pudo ser conocida por terceros.',
+   articulo:'Art. 5 num. 4 COIP — in dubio pro reo (duda razonable sobre autoría material).', ancla:false, targets:['D9']},
+  {id:'F7', nombre:'Correos de la víctima a su abogado', tipo:'Documental', atk:1000, arte:'📧',
+   detalle:'Anuncian que Villamar iba a separar a Salazar de la gerencia y evaluar acciones legales.',
+   vulnerabilidad:'Solo prueba móvil/motivo, no autoría material; existe otro sospechoso con motivo y medios.',
+   articulo:'Art. 454 COIP — pertinencia; debe valorarse también la hipótesis alternativa.', ancla:false, targets:['D7']},
+  {id:'F8', nombre:'Escena sin forzamiento ni robo', tipo:'Indiciaria', atk:1000, arte:'🚪',
+   detalle:'Se descarta el móvil de robo simple por ausencia de forzamiento.',
+   vulnerabilidad:'Solo descarta una hipótesis (robo); no identifica al autor ni excluye el ingreso de terceros.',
+   articulo:'Art. 5 num. 4 COIP — in dubio pro reo.', ancla:false, targets:['D6']},
+  {id:'F9', nombre:'Declaración de Salazar en sede policial', tipo:'Testimonial', atk:1500, arte:'🎙️',
+   detalle:'Versión tomada en sede policial sin abogado presente.',
+   vulnerabilidad:'Posible vulneración del derecho a la defensa técnica; perito psicológico forense confirma vicio.',
+   articulo:'Art. 76.7 lit. g/h CRE y Art. 5 num. 8 COIP — derecho a la defensa técnica.', ancla:true, targets:['D3']},
+];
+
+const DEFENSA = [
+  {id:'D1', nombre:'Vacío de cadena de custodia', tipo:'Procesal', def:2000, arte:'📦',
+   detalle:'El arma estuvo 8h10 en un vehículo policial SIN responsable de custodia registrado.',
+   articulo:'Art. 455-456 COIP — ruptura de cadena de custodia invalida la prueba material.'},
+  {id:'D2', nombre:'Allanamiento sin orden judicial', tipo:'Procesal', def:2500, arte:'🚔',
+   detalle:'Registro del domicilio/vehículo con solo autorización verbal telefónica, regularizada 46h después.',
+   articulo:'Art. 76 num. 4 CRE — prueba obtenida con violación de derechos carece de validez.'},
+  {id:'D3', nombre:'Declaración sin abogado presente', tipo:'Procesal', def:2200, arte:'⚖️',
+   detalle:'La versión de Salazar en sede policial se tomó sin abogado; perito psicológico forense lo confirma.',
+   articulo:'Art. 76.7 lit. g/h CRE — derecho a la defensa técnica.'},
+  {id:'D4', nombre:'Coartada del restaurante', tipo:'Testimonial', atk:1800, arte:'🍽️',
+   detalle:'Mesero de "El Rincón Criollo" atendió a Salazar hasta las 20h20 (recibo con hora impresa), a 12-15 min en auto.',
+   articulo:'Art. 5 num. 4 COIP — in dubio pro reo (contradicción horaria genera duda razonable).'},
+  {id:'D5', nombre:'Llamada tranquila a la pareja (20h53)', tipo:'Testimonial', atk:900, arte:'📞',
+   detalle:'Salazar llama a su pareja diciendo que ya iba para la casa, tranquilo.',
+   articulo:'Art. 454 num. 6 COIP — valoración integral y contextual de la prueba.'},
+  {id:'D6', nombre:'Video de cámara de parqueadero posterior', tipo:'Documental', def:1500, arte:'📹',
+   detalle:'Vehículo no identificado ingresó a las 20h41 y salió a las 21h05, no registrado en libro de visitas.',
+   articulo:'Art. 5 num. 4 COIP — in dubio pro reo (posible tercero en la escena).'},
+  {id:'D7', nombre:'Denuncia previa contra Marco Vinueza Ruiz', tipo:'Testimonial', atk:1200, arte:'🗂️',
+   detalle:'Extrabajador despedido, con amenazas verbales contra la víctima y antecedente de tenencia irregular de arma.',
+   articulo:'Art. 454 COIP — debe valorarse la hipótesis alternativa de autoría.'},
+  {id:'D8', nombre:'Contraperitaje balístico', tipo:'Pericial', atk:1600, arte:'🔬',
+   detalle:'"Probable" no equivale a "identificación positiva"; no se puede concluir con certeza.',
+   articulo:'Art. 502 COIP — exigencia de fundamentación cierta del informe pericial.'},
+  {id:'D9', nombre:'Clave financiera conocida por terceros', tipo:'Documental', def:1000, arte:'🔑',
+   detalle:'No se probó quién tecleó físicamente la clave usada en las transferencias.',
+   articulo:'Art. 5 num. 4 COIP — in dubio pro reo (autoría material no acreditada).'},
+];
+DEFENSA.forEach(c=> c.posicion = TIPO_POSICION[c.tipo]);
+
+const LP_INICIAL = 1200;
+const PENALIZACION_EQUIVOCACION = 400;
+
+// ---------- STATE ----------
+let state = {
+  fiscalia:{}, defensa:{}, cardInPlay:null, pendingD:null,
+  lpFiscalia:LP_INICIAL, lpDefensa:LP_INICIAL,
+  timer:{seconds:40, remaining:40, running:false, intervalId:null},
+};
+
+function initState(){
+  FISCALIA.forEach(c=> state.fiscalia[c.id] = {status:'pending'});
+  DEFENSA.forEach(c=> state.defensa[c.id] = {used:false});
+  state.cardInPlay = null; state.pendingD = null;
+  state.lpFiscalia = LP_INICIAL; state.lpDefensa = LP_INICIAL;
+  pauseTimer();
+  state.timer.remaining = parseInt(document.getElementById('timerSeconds').value) || 40;
+}
+
+// ---------- CARD RENDERING ----------
+function cardHTML(c, {size='sm', extraClass='', clickable=false, onClick='', enPosicion=null} = {}){
+  const pos = enPosicion || c.posicion || 'ATAQUE';
+  const isDef = pos==='DEFENSA';
+  const statHTML = (c.atk!=null? `<span class="atk">ATK ${c.atk}</span>`:'') + (c.def!=null? `<span class="def">DEF ${c.def}</span>`:'');
+  const ribbon = c.posicion ? `<span class="rcard-pos-ribbon">${isDef?'🛡️DEF':'⚔️ATK'}</span>` : '';
+  const ancla = c.ancla ? `<span class="rcard-ancla">⚓</span>` : '';
+  return `
+    <div class="rcard ${size} type-${c.tipo.toLowerCase()} ${extraClass}" ${clickable?`onclick="${onClick}"`:''} style="position:relative;"
+         onmouseenter="showPreview('${c.id}', event)" onmousemove="movePreview(event)" onmouseleave="hidePreview()">
+      ${ancla}${ribbon}
+      <div class="rcard-top">${c.nombre}</div>
+      <div class="rcard-art">${c.arte}</div>
+      <div class="rcard-type">${TIPO_ICON[c.tipo]} ${c.tipo}</div>
+      <div class="rcard-desc">${c.detalle}</div>
+      <div class="rcard-stats">${statHTML}</div>
+    </div>`;
+}
+
+function cardBackHTML(size, label){
+  return `<div class="rcard ${size} used-back">${label}</div>`;
+}
+
+// ---------- HOVER PREVIEW ----------
+function showPreview(id, evt){
+  const c = id.startsWith('F') ? FISCALIA.find(x=>x.id===id) : DEFENSA.find(x=>x.id===id);
+  if(!c) return;
+  const preview = document.getElementById('cardPreview');
+  preview.innerHTML = cardHTML(c, {size:'lg'});
+  preview.style.display = 'block';
+  movePreview(evt);
+}
+
+function movePreview(evt){
+  const preview = document.getElementById('cardPreview');
+  if(preview.style.display !== 'block') return;
+  const margin = 20;
+  let x = evt.clientX + margin;
+  let y = evt.clientY + margin;
+  const w = 230, h = 320;
+  if(x + w > window.innerWidth) x = evt.clientX - w - margin;
+  if(y + h > window.innerHeight) y = evt.clientY - h - margin;
+  preview.style.left = Math.max(4,x) + 'px';
+  preview.style.top = Math.max(4,y) + 'px';
+}
+
+function hidePreview(){
+  document.getElementById('cardPreview').style.display = 'none';
+}
+
+// ---------- RENDER ----------
+function renderAll(){
+  renderFiscaliaMano(); renderDefensaMano(); renderSlots(); renderLP(); renderAnchors();
+}
+
+function renderFiscaliaMano(){
+  const wrap = document.getElementById('fiscaliaMano');
+  wrap.innerHTML='';
+  FISCALIA.forEach(c=>{
+    const st = state.fiscalia[c.id];
+    let html;
+    if(st.status==='pending'){
+      const clickable = !state.cardInPlay;
+      html = cardHTML(c,{size:'sm', extraClass: clickable? 'clickable':'disabled', clickable, onClick:`playFiscaliaCard('${c.id}')`, enPosicion:'ATAQUE'});
+    } else {
+      html = cardBackHTML('sm', st.status==='intact' ? `✅ ${c.nombre}<br><span class="tag intact">INTACTA</span>` : `❌ ${c.nombre}<br><span class="tag neutralized">NEUTRALIZADA</span>`);
+    }
+    wrap.insertAdjacentHTML('beforeend', html);
+  });
+}
+
+function renderDefensaMano(){
+  const wrap = document.getElementById('defensaMano');
+  wrap.innerHTML='';
+  const active = state.cardInPlay;
+  DEFENSA.forEach(c=>{
+    const used = state.defensa[c.id].used;
+    const enabled = active && !used;
+    let html;
+    if(used){
+      html = cardBackHTML('sm', `🗂️ ${c.nombre}<br><span class="tag neutralized">USADA</span>`);
+    } else {
+      html = cardHTML(c,{size:'sm', extraClass: enabled? 'clickable':'disabled', clickable:enabled, onClick:`chooseDefenseCard('${c.id}')`});
+    }
+    wrap.insertAdjacentHTML('beforeend', html);
+  });
+}
+
+function renderSlots(){
+  const slotF = document.getElementById('slotFiscalia');
+  const slotD = document.getElementById('slotDefensa');
+  const btnPass = document.getElementById('btnPass');
+  if(!state.cardInPlay){
+    slotF.innerHTML = '<div class="slot-placeholder">Zona de ataque de Fiscalía</div>';
+    slotD.innerHTML = '<div class="slot-placeholder">Zona de respuesta de Defensa</div>';
+    btnPass.classList.add('hidden');
+    return;
+  }
+  const f = FISCALIA.find(x=>x.id===state.cardInPlay);
+  slotF.innerHTML = cardHTML(f,{size:'lg', enPosicion:'ATAQUE'});
+  slotD.innerHTML = '<div class="slot-placeholder">Esperando respuesta de Defensa…</div>';
+  btnPass.classList.remove('hidden');
+}
+
+function renderLP(){
+  document.getElementById('lpFiscalia').textContent = Math.max(0,state.lpFiscalia);
+  document.getElementById('lpDefensa').textContent = Math.max(0,state.lpDefensa);
+  document.getElementById('lpFiscaliaFill').style.width = Math.max(0,(state.lpFiscalia/LP_INICIAL)*100)+'%';
+  document.getElementById('lpDefensaFill').style.width = Math.max(0,(state.lpDefensa/LP_INICIAL)*100)+'%';
+}
+
+function renderAnchors(){
+  const anclas = FISCALIA.filter(c=>c.ancla);
+  const pills = document.getElementById('anchorPills');
+  pills.innerHTML = anclas.map(c=>{
+    const hit = state.fiscalia[c.id].status==='neutralized';
+    return `<div class="anchor-pill ${hit?'hit':''}">⚓ ${c.nombre} ${hit?'✔ ROTA':''}</div>`;
+  }).join('');
+}
+
+function addLog(html){
+  const log = document.getElementById('log');
+  if(log.querySelector('i')) log.innerHTML='';
+  const div = document.createElement('div');
+  div.className='log-entry';
+  div.innerHTML = html;
+  log.prepend(div);
+}
+
+// ---------- LP REASON TOAST ----------
+let toastTimeoutId = null;
+function showToast(mensaje, side){
+  const toast = document.getElementById('lpToast');
+  toast.textContent = mensaje;
+  toast.className = `lp-toast show ${side}`;
+  if(toastTimeoutId) clearTimeout(toastTimeoutId);
+  toastTimeoutId = setTimeout(()=>{ toast.classList.remove('show'); }, 5000);
+}
+
+// ---------- GAME ACTIONS ----------
+function playFiscaliaCard(id){
+  if(state.cardInPlay) return;
+  state.cardInPlay = id;
+  resetTimerDisplay();
+  renderAll();
+}
+
+function chooseDefenseCard(dId){
+  const fId = state.cardInPlay;
+  if(!fId) return;
+  const f = FISCALIA.find(c=>c.id===fId);
+  const d = DEFENSA.find(c=>c.id===dId);
+
+  if(!f.targets.includes(dId)){
+    // Carta equivocada: no aplica contra esta prueba, penaliza pero no consume la carta ni termina el turno
+    state.lpDefensa -= PENALIZACION_EQUIVOCACION;
+    addLog(`<span class="tag intact">NO APLICA</span> "${d.nombre}" no neutraliza "${f.nombre}" (vulnerabilidad distinta). Defensa -${PENALIZACION_EQUIVOCACION} LP por elección incorrecta.`);
+    showToast(`❌ Defensa -${PENALIZACION_EQUIVOCACION} LP: "${d.nombre}" no es la objeción correcta contra "${f.nombre}".`, 'azul');
+    renderLP();
+    checkAutoVerdict();
+    return;
+  }
+
+  state.pendingD = dId;
+  // show the defense card in its slot with correct posture (attack upright / defense rotated)
+  const slotD = document.getElementById('slotDefensa');
+  slotD.innerHTML = cardHTML(d,{size:'lg', extraClass: d.posicion==='DEFENSA' ? 'pos-defensa en-slot' : ''});
+
+  const statLabel = d.posicion==='ATAQUE' ? `ATK ${d.atk}` : `DEF ${d.def}`;
+  document.getElementById('modalTitle').textContent = `Defensa responde con: ${d.nombre}`;
+  document.getElementById('modalBody').innerHTML = `
+    <b>Carta de Fiscalía en juego:</b> ${f.nombre} (ATK ${f.atk})<br>
+    <b>Carta de Defensa:</b> ${d.nombre} — ${d.posicion==='ATAQUE'?'⚔️ ATAQUE':'🛡️ DEFENSA'} (${statLabel})<br>
+    <b>Fundamento sugerido:</b> ${d.articulo}<br><br>
+    Escuchen el argumento oral del estudiante y confirmen si el fundamento jurídico es correcto y suficiente.
+  `;
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function confirmObjection(valid){
+  document.getElementById('modalBg').classList.remove('show');
+  const fId = state.cardInPlay;
+  const dId = state.pendingD;
+  if(!fId || !dId) return;
+  const f = FISCALIA.find(c=>c.id===fId);
+  const d = DEFENSA.find(c=>c.id===dId);
+  pauseTimer();
+  state.defensa[dId].used = true;
+
+  if(!valid){
+    state.lpDefensa -= f.atk;
+    state.fiscalia[fId].status='intact';
+    addLog(`<span class="tag intact">INTACTA</span> <b>${f.nombre}</b> — el argumento con "${d.nombre}" fue insuficiente. Ataque directo: Defensa -${f.atk} LP.<br>
+      <span class="articulo">Fundamento Fiscalía: ${f.articulo}</span>`);
+    showToast(`❌ Defensa -${f.atk} LP: el fundamento con "${d.nombre}" fue insuficiente para el profesor. Ataque directo de "${f.nombre}".`, 'azul');
+  } else if(d.posicion==='DEFENSA'){
+    if(f.atk > d.def){
+      const dmg = f.atk - d.def;
+      state.lpDefensa -= dmg;
+      state.fiscalia[fId].status='intact';
+      addLog(`<span class="tag intact">INTACTA</span> <b>${f.nombre}</b> (ATK ${f.atk}) supera a <b>${d.nombre}</b> (DEF ${d.def}). Defensa -${dmg} LP.<br>
+        <span class="articulo">Vulnerabilidad: ${f.vulnerabilidad}</span><br><span class="articulo">Fundamento Defensa: ${d.articulo}</span>`);
+      showToast(`❌ Defensa -${dmg} LP: "${f.nombre}" (ATK ${f.atk}) fue más fuerte que el blindaje de "${d.nombre}" (DEF ${d.def}).`, 'azul');
+    } else {
+      state.fiscalia[fId].status='neutralized';
+      addLog(`<span class="tag neutralized">NEUTRALIZADA</span> <b>${f.nombre}</b> (ATK ${f.atk}) bloqueada por <b>${d.nombre}</b> (DEF ${d.def}). Sin daño.<br>
+        <span class="articulo">Vulnerabilidad: ${f.vulnerabilidad}</span><br><span class="articulo">Fundamento Defensa: ${d.articulo}</span>`);
+      showToast(`✅ Sin daño: "${d.nombre}" (DEF ${d.def}) blindó con éxito contra "${f.nombre}" (ATK ${f.atk}).`, 'rojo');
+    }
+  } else {
+    if(d.atk > f.atk){
+      const dmg = d.atk - f.atk;
+      state.lpFiscalia -= dmg;
+      state.fiscalia[fId].status='neutralized';
+      addLog(`<span class="tag neutralized">NEUTRALIZADA</span> <b>${f.nombre}</b> (ATK ${f.atk}) vencida por contraataque de <b>${d.nombre}</b> (ATK ${d.atk}). Fiscalía -${dmg} LP.<br>
+        <span class="articulo">Vulnerabilidad: ${f.vulnerabilidad}</span><br><span class="articulo">Fundamento Defensa: ${d.articulo}</span>`);
+      showToast(`❌ Fiscalía -${dmg} LP: el contraataque de "${d.nombre}" (ATK ${d.atk}) superó a "${f.nombre}" (ATK ${f.atk}).`, 'rojo');
+    } else if(d.atk === f.atk){
+      state.fiscalia[fId].status='neutralized';
+      addLog(`<span class="tag neutralized">NEUTRALIZADA</span> <b>${f.nombre}</b> y <b>${d.nombre}</b> empatan en ATK (${f.atk}). Ambas caen, sin daño.<br>
+        <span class="articulo">Vulnerabilidad: ${f.vulnerabilidad}</span><br><span class="articulo">Fundamento Defensa: ${d.articulo}</span>`);
+      showToast(`🤝 Empate ${f.atk} vs ${f.atk}: "${f.nombre}" y "${d.nombre}" se anulan mutuamente, sin daño para nadie.`, 'azul');
+    } else {
+      const dmg = f.atk - d.atk;
+      state.lpDefensa -= dmg;
+      state.fiscalia[fId].status='intact';
+      addLog(`<span class="tag intact">INTACTA</span> <b>${f.nombre}</b> (ATK ${f.atk}) supera el contraataque de <b>${d.nombre}</b> (ATK ${d.atk}). Defensa -${dmg} LP.<br>
+        <span class="articulo">Vulnerabilidad: ${f.vulnerabilidad}</span><br><span class="articulo">Fundamento Defensa: ${d.articulo}</span>`);
+      showToast(`❌ Defensa -${dmg} LP: el contraataque de "${d.nombre}" (ATK ${d.atk}) fue más débil que "${f.nombre}" (ATK ${f.atk}).`, 'azul');
+    }
+  }
+
+  state.cardInPlay = null; state.pendingD = null;
+  renderAll();
+  checkAutoVerdict();
+}
+
+function resolveNoObjection(){
+  const fId = state.cardInPlay;
+  if(!fId) return;
+  pauseTimer();
+  const f = FISCALIA.find(c=>c.id===fId);
+  state.lpDefensa -= f.atk;
+  state.fiscalia[fId].status='intact';
+  addLog(`<span class="tag intact">INTACTA</span> <b>${f.nombre}</b> — Defensa no objetó (o se agotó el tiempo). Ataque directo: Defensa -${f.atk} LP.<br>
+    <span class="articulo">Fundamento Fiscalía: ${f.articulo}</span>`);
+  showToast(`❌ Defensa -${f.atk} LP: no se objetó a tiempo "${f.nombre}", quedó como ataque directo sin bloqueo.`, 'azul');
+  state.cardInPlay = null;
+  renderAll();
+  checkAutoVerdict();
+}
+
+function checkAutoVerdict(){
+  const allResolved = FISCALIA.every(c=>state.fiscalia[c.id].status!=='pending');
+  const anclas = FISCALIA.filter(c=>c.ancla);
+  const anclasRotas = anclas.filter(c=>state.fiscalia[c.id].status==='neutralized').length;
+  if(anclasRotas>=2 || allResolved || state.lpFiscalia<=0 || state.lpDefensa<=0){
+    showVerdict();
+  }
+}
+
+// ---------- TIMER ----------
+function updateTimerDisplay(){
+  const t = state.timer;
+  const disp = document.getElementById('timerDisplay');
+  const m = Math.floor(t.remaining/60), s = t.remaining%60;
+  disp.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  const fill = document.getElementById('timerFill');
+  const pct = Math.max(0, (t.remaining/t.seconds)*100);
+  fill.style.width = pct+'%';
+  fill.style.background = pct>50? 'var(--verde)' : pct>20? 'var(--amarillo)' : 'var(--rojo)';
+}
+
+function startTimer(){
+  if(!state.cardInPlay){ alert('Primero juega una carta de Fiscalía.'); return; }
+  if(state.timer.running) return;
+  state.timer.running = true;
+  state.timer.intervalId = setInterval(()=>{
+    state.timer.remaining--;
+    if(state.timer.remaining<=0){
+      state.timer.remaining=0;
+      updateTimerDisplay();
+      pauseTimer();
+      resolveNoObjection();
+      return;
+    }
+    updateTimerDisplay();
+  },1000);
+}
+
+function pauseTimer(){
+  state.timer.running=false;
+  if(state.timer.intervalId) clearInterval(state.timer.intervalId);
+  state.timer.intervalId=null;
+}
+
+function resetTimerDisplay(){
+  pauseTimer();
+  state.timer.seconds = parseInt(document.getElementById('timerSeconds').value) || 40;
+  state.timer.remaining = state.timer.seconds;
+  updateTimerDisplay();
+}
+
+// ---------- VERDICT ----------
+function showVerdict(){
+  const anclas = FISCALIA.filter(c=>c.ancla);
+  const anclasRotas = anclas.filter(c=>state.fiscalia[c.id].status==='neutralized').length;
+  const box = document.getElementById('verdictBox');
+  const title = document.getElementById('verdictTitle');
+  const sub = document.getElementById('verdictSubtitle');
+  box.classList.remove('win-fiscalia','win-defensa');
+
+  if(anclasRotas>=2){
+    box.classList.add('win-defensa');
+    title.textContent = '⚖️ DUDA RAZONABLE — GANA LA DEFENSA';
+    sub.textContent = `Se rompieron ${anclasRotas} de las 3 pruebas ancla. El caso pierde solidez constitucional, sin importar los LP restantes.`;
+  } else if(state.lpDefensa<=0){
+    box.classList.add('win-fiscalia');
+    title.textContent = '🔨 CONDENA — GANA FISCALÍA';
+    sub.textContent = 'Los puntos de vida de la Defensa llegaron a 0. La teoría del caso de Fiscalía se sostuvo más allá de toda duda razonable.';
+  } else if(state.lpFiscalia<=0){
+    box.classList.add('win-defensa');
+    title.textContent = '⚖️ ABSOLUCIÓN — GANA LA DEFENSA';
+    sub.textContent = 'Los puntos de vida de Fiscalía llegaron a 0: sus pruebas fueron desmontadas por los contraataques de la Defensa.';
+  } else {
+    const fWin = state.lpFiscalia > state.lpDefensa;
+    box.classList.add(fWin?'win-fiscalia':'win-defensa');
+    title.textContent = fWin? '🔨 CONDENA — GANA FISCALÍA' : '⚖️ DUDA RAZONABLE — GANA LA DEFENSA';
+    sub.textContent = `Se jugaron todas las cartas. LP Fiscalía: ${Math.max(0,state.lpFiscalia)} vs LP Defensa: ${Math.max(0,state.lpDefensa)}.`;
+  }
+  box.classList.add('show');
+}
+
+// ---------- INIT ----------
+function resetGame(){
+  initState();
+  document.getElementById('log').innerHTML = '<i>Aún no se han jugado cartas.</i>';
+  renderAll();
+  updateTimerDisplay();
+  document.getElementById('verdictBox').classList.remove('show');
+}
+
+function startGame(){
+  document.getElementById('welcomeScreen').classList.add('hidden');
+}
+
+document.getElementById('timerSeconds').addEventListener('change', ()=>{ if(!state.cardInPlay) resetTimerDisplay(); });
+
+initState();
+renderAll();
+updateTimerDisplay();
+</script>
+
+</body>
+</html>
