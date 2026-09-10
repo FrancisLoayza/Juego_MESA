@@ -212,7 +212,7 @@
   3. Si eligen una carta que <b>no aplica</b> contra esa prueba, es una jugada inválida automática: la Defensa pierde <b>400 LP</b> de penalización, esa carta no se gasta y pueden intentar con otra mientras haya tiempo.<br>
   4. Si la carta elegida sí aplica, se abre la evaluación del profesor. Si es 🔬 Pericial o 🗣️ Testimonial se coloca <b>de pie (ATAQUE)</b>; si es 📄 Documental se coloca <b>acostada (DEFENSA)</b> — igual que en un juego de cartas de mesa real.<br>
   5. El profesor escucha el argumento oral y pulsa ✅ (válido) o ❌ (insuficiente). El sistema calcula el combate (ATK vs DEF o ATK vs ATK) y reparte daño a los puntos de vida (LP).<br>
-  6. Ambos bandos inician con 1200 LP. Si Defensa acumula errores (penalizaciones + ataques directos + combates perdidos), sus LP bajan rápido y <b>Fiscalía gana en pocos turnos</b>. Gana Defensa si Fiscalía llega a 0 LP, o si se rompen 2 de las 3 pruebas ⚓ ancla (balística, residuos de disparo, declaración sin abogado).
+  6. Ambos bandos inician con 4000 LP. Si Defensa acumula errores (penalizaciones + ataques directos + combates perdidos), sus LP bajan rápido y <b>Fiscalía gana en pocos turnos</b>. Gana Defensa si Fiscalía llega a 0 LP, o si se rompen 2 de las 3 pruebas ⚓ ancla (balística, residuos de disparo, declaración sin abogado).
   <table>
     <tr><th>Tipo</th><th>Postura en la mesa</th></tr>
     <tr><td>🔬 Pericial</td><td>De pie — ATAQUE</td></tr>
@@ -224,12 +224,12 @@
 <div class="lp-bar-wrap">
   <div class="lp-box rojo">
     <div class="lp-title">🔴 FISCALÍA — LP</div>
-    <div class="lp-num" id="lpFiscalia">1200</div>
+    <div class="lp-num" id="lpFiscalia">4000</div>
     <div class="lp-track"><div class="lp-fill" id="lpFiscaliaFill" style="width:100%"></div></div>
   </div>
   <div class="lp-box azul">
     <div class="lp-title">🔵 DEFENSA — LP</div>
-    <div class="lp-num" id="lpDefensa">1200</div>
+    <div class="lp-num" id="lpDefensa">4000</div>
     <div class="lp-track"><div class="lp-fill" id="lpDefensaFill" style="width:100%"></div></div>
   </div>
 </div>
@@ -368,7 +368,7 @@ const DEFENSA = [
 ];
 DEFENSA.forEach(c=> c.posicion = TIPO_POSICION[c.tipo]);
 
-const LP_INICIAL = 1200;
+const LP_INICIAL = 4000;
 const PENALIZACION_EQUIVOCACION = 400;
 
 // ---------- STATE ----------
