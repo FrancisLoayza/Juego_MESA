@@ -220,7 +220,8 @@
   3. Si eligen una carta que <b>no aplica</b> contra esa prueba, es una jugada inválida automática: la Defensa pierde <b>400 LP</b> de penalización, esa carta no se gasta y pueden intentar con otra mientras haya tiempo.<br>
   4. Si la carta elegida sí aplica, se abre la evaluación del profesor. Si es 🔬 Pericial o 🗣️ Testimonial se coloca <b>de pie (ATAQUE)</b>; si es 📄 Documental se coloca <b>acostada (DEFENSA)</b> — igual que en un juego de cartas de mesa real.<br>
   5. El profesor escucha el argumento oral y pulsa ✅ (válido) o ❌ (insuficiente). El sistema calcula el combate (ATK vs DEF o ATK vs ATK) y reparte daño a los puntos de vida (LP).<br>
-  6. Ambos bandos inician con 4000 LP. Si Defensa acumula errores (penalizaciones + ataques directos + combates perdidos), sus LP bajan rápido y <b>Fiscalía gana en pocos turnos</b>. Gana Defensa si Fiscalía llega a 0 LP, o si se rompen 2 de las 3 pruebas ⚓ ancla (balística, residuos de disparo, declaración sin abogado).
+  6. Ambos bandos inician con 4000 LP. Si Defensa acumula errores (penalizaciones + ataques directos + combates perdidos), sus LP bajan rápido y <b>Fiscalía gana en pocos turnos</b>. Gana Defensa si Fiscalía llega a 0 LP, o si se rompen <b>las 3 pruebas</b> ⚓ ancla (balística, residuos de disparo, declaración sin abogado).<br>
+  7. Cada bando tiene un <b>banco de tiempo total de 1 minuto</b> para todo el duelo (no se recarga cada turno): si en un turno solo usan 20 segundos, les quedan 40 para sus próximos turnos, y así sucesivamente hasta agotarlo.
   <table>
     <tr><th>Tipo</th><th>Postura en la mesa</th></tr>
     <tr><td>🔬 Pericial</td><td>De pie — ATAQUE</td></tr>
@@ -259,7 +260,7 @@
         <div id="timerDisplay">--</div>
         <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
         <div class="timer-controls">
-          <label style="font-size:.7rem;">Seg: <input type="number" id="timerSeconds" value="60" min="10" max="180"></label>
+          <label style="font-size:.7rem;">Banco total (seg): <input type="number" id="timerSeconds" value="60" min="10" max="600"></label>
           <button class="btn" onclick="startTimer()">▶️</button>
           <button class="btn" onclick="pauseTimer()">⏸️</button>
           <button class="btn" onclick="resetTimerDisplay()">⏮️</button>
@@ -385,7 +386,8 @@ const PENALIZACION_EQUIVOCACION = 400;
 let state = {
   fiscalia:{}, defensa:{}, cardInPlay:null, pendingD:null,
   lpFiscalia:LP_INICIAL, lpDefensa:LP_INICIAL,
-  timer:{phase:'fiscalia', seconds:60, remaining:60, running:false, intervalId:null},
+  banks:{fiscalia:60, defensa:60},
+  timer:{phase:'fiscalia', fullSeconds:60, remaining:60, running:false, intervalId:null},
 };
 
 function initState(){
@@ -394,8 +396,11 @@ function initState(){
   state.cardInPlay = null; state.pendingD = null;
   state.lpFiscalia = LP_INICIAL; state.lpDefensa = LP_INICIAL;
   pauseTimer();
+  const totalSeconds = parseInt(document.getElementById('timerSeconds').value) || 60;
+  state.banks = {fiscalia: totalSeconds, defensa: totalSeconds};
   state.timer.phase = 'fiscalia';
-  state.timer.remaining = parseInt(document.getElementById('timerSeconds').value) || 60;
+  state.timer.fullSeconds = totalSeconds;
+  state.timer.remaining = state.banks.fiscalia;
 }
 
 // ---------- CARD RENDERING ----------
@@ -684,7 +689,7 @@ function checkAutoVerdict(){
   const allResolved = FISCALIA.every(c=>state.fiscalia[c.id].status!=='pending');
   const anclas = FISCALIA.filter(c=>c.ancla);
   const anclasRotas = anclas.filter(c=>state.fiscalia[c.id].status==='neutralized').length;
-  if(anclasRotas>=2 || allResolved || state.lpFiscalia<=0 || state.lpDefensa<=0){
+  if(anclasRotas>=anclas.length || allResolved || state.lpFiscalia<=0 || state.lpDefensa<=0){
     showVerdict();
     return true;
   }
@@ -698,19 +703,22 @@ function updateTimerDisplay(){
   const m = Math.floor(t.remaining/60), s = t.remaining%60;
   disp.textContent = `${m}:${s.toString().padStart(2,'0')}`;
   const fill = document.getElementById('timerFill');
-  const pct = Math.max(0, (t.remaining/t.seconds)*100);
+  const pct = Math.max(0, (t.remaining/t.fullSeconds)*100);
   fill.style.width = pct+'%';
   fill.style.background = pct>50? 'var(--verde)' : pct>20? 'var(--amarillo)' : 'var(--rojo)';
   const label = document.getElementById('timerPhaseLabel');
-  if(label) label.textContent = t.phase==='defensa' ? '🔵 Tiempo de Defensa para objetar' : '🔴 Tiempo de Fiscalía para elegir carta';
+  if(label) label.textContent = t.phase==='defensa' ? '🔵 Banco de Defensa para objetar' : '🔴 Banco de Fiscalía para elegir carta';
 }
 
 function startPhaseTimer(phase){
-  pauseTimer();
+  pauseTimer(); // guarda en el banco lo que sobró de la fase anterior
   state.timer.phase = phase;
-  state.timer.seconds = parseInt(document.getElementById('timerSeconds').value) || 60;
-  state.timer.remaining = state.timer.seconds;
+  state.timer.remaining = state.banks[phase];
   updateTimerDisplay();
+  if(state.timer.remaining<=0){
+    handleTimeUp(phase);
+    return;
+  }
   runTimerInterval();
 }
 
@@ -718,27 +726,37 @@ function runTimerInterval(){
   state.timer.running = true;
   state.timer.intervalId = setInterval(()=>{
     state.timer.remaining--;
+    state.banks[state.timer.phase] = state.timer.remaining;
     if(state.timer.remaining<=0){
       state.timer.remaining=0;
+      state.banks[state.timer.phase]=0;
       updateTimerDisplay();
       pauseTimer();
-      if(state.timer.phase==='defensa'){
-        resolveNoObjection();
-      } else {
-        showToast('⏰ Tiempo de Fiscalía agotado. Puede elegir su carta cuando quiera.', 'rojo');
-      }
+      handleTimeUp(state.timer.phase);
       return;
     }
     updateTimerDisplay();
   },1000);
 }
 
+function handleTimeUp(phase){
+  if(phase==='defensa'){
+    resolveNoObjection();
+  } else {
+    showToast('⏰ El banco de tiempo de Fiscalía se agotó. Puede elegir su carta sin límite de tiempo restante.', 'rojo');
+  }
+}
+
 function startTimer(){
   if(state.timer.running) return;
+  if(state.timer.remaining<=0) return;
   runTimerInterval();
 }
 
 function pauseTimer(){
+  if(state.timer.running){
+    state.banks[state.timer.phase] = state.timer.remaining; // el sobrante pasa al próximo turno de ese mismo bando
+  }
   state.timer.running=false;
   if(state.timer.intervalId) clearInterval(state.timer.intervalId);
   state.timer.intervalId=null;
@@ -746,8 +764,11 @@ function pauseTimer(){
 
 function resetTimerDisplay(){
   pauseTimer();
-  state.timer.seconds = parseInt(document.getElementById('timerSeconds').value) || 60;
-  state.timer.remaining = state.timer.seconds;
+  const totalSeconds = parseInt(document.getElementById('timerSeconds').value) || 60;
+  state.banks.fiscalia = totalSeconds;
+  state.banks.defensa = totalSeconds;
+  state.timer.fullSeconds = totalSeconds;
+  state.timer.remaining = state.banks[state.timer.phase];
   updateTimerDisplay();
 }
 
@@ -760,10 +781,10 @@ function showVerdict(){
   const sub = document.getElementById('verdictSubtitle');
   box.classList.remove('win-fiscalia','win-defensa');
 
-  if(anclasRotas>=2){
+  if(anclasRotas>=anclas.length){
     box.classList.add('win-defensa');
     title.textContent = '⚖️ DUDA RAZONABLE — GANA LA DEFENSA';
-    sub.textContent = `Se rompieron ${anclasRotas} de las 3 pruebas ancla. El caso pierde solidez constitucional, sin importar los LP restantes.`;
+    sub.textContent = `Se rompieron las ${anclasRotas} pruebas ancla. El caso pierde toda solidez constitucional, sin importar los LP restantes.`;
   } else if(state.lpDefensa<=0){
     box.classList.add('win-fiscalia');
     title.textContent = '🔨 CONDENA — GANA FISCALÍA';
