@@ -51,6 +51,14 @@
   .lp-toast.rojo{background:rgba(165,35,31,.35); border:1px solid var(--rojo);}
   .lp-toast.azul{background:rgba(28,74,134,.35); border:1px solid var(--azul);}
 
+  .mini-msg-wrap{display:flex; justify-content:center; min-height:0;}
+  .mini-msg{
+    max-width:520px; width:100%; text-align:center; font-size:.8rem; font-weight:600; color:#fff;
+    background:rgba(165,35,31,.85); border-radius:8px; margin:0 auto; opacity:0; max-height:0; overflow:hidden;
+    transition:opacity .25s ease, max-height .25s ease, padding .25s ease, margin .25s ease;
+  }
+  .mini-msg.show{opacity:1; max-height:50px; padding:6px 12px; margin-bottom:8px;}
+
   /* ---------- MESA (tabletop) ---------- */
   .mesa-marco{
     max-width:1300px; margin:10px auto; padding:14px; border-radius:22px;
@@ -247,10 +255,11 @@
       <div class="slot" id="slotFiscalia"><div class="slot-placeholder">Zona de ataque de Fiscalía</div></div>
       <div class="vs-mid">
         <div class="vs-icon">⚔️🆚🛡️</div>
+        <div id="timerPhaseLabel" style="font-size:.75rem; opacity:.85; font-weight:bold;"></div>
         <div id="timerDisplay">--</div>
         <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
         <div class="timer-controls">
-          <label style="font-size:.7rem;">Seg: <input type="number" id="timerSeconds" value="40" min="10" max="180"></label>
+          <label style="font-size:.7rem;">Seg: <input type="number" id="timerSeconds" value="60" min="10" max="180"></label>
           <button class="btn" onclick="startTimer()">▶️</button>
           <button class="btn" onclick="pauseTimer()">⏸️</button>
           <button class="btn" onclick="resetTimerDisplay()">⏮️</button>
@@ -262,6 +271,7 @@
     </div>
 
     <div class="zona-label">🔵 Mano de Defensa</div>
+    <div class="mini-msg-wrap"><div class="mini-msg" id="miniMsg"></div></div>
     <div class="mano centrado" id="defensaMano"></div>
   </div>
 </div>
@@ -375,7 +385,7 @@ const PENALIZACION_EQUIVOCACION = 400;
 let state = {
   fiscalia:{}, defensa:{}, cardInPlay:null, pendingD:null,
   lpFiscalia:LP_INICIAL, lpDefensa:LP_INICIAL,
-  timer:{seconds:40, remaining:40, running:false, intervalId:null},
+  timer:{phase:'fiscalia', seconds:60, remaining:60, running:false, intervalId:null},
 };
 
 function initState(){
@@ -384,7 +394,8 @@ function initState(){
   state.cardInPlay = null; state.pendingD = null;
   state.lpFiscalia = LP_INICIAL; state.lpDefensa = LP_INICIAL;
   pauseTimer();
-  state.timer.remaining = parseInt(document.getElementById('timerSeconds').value) || 40;
+  state.timer.phase = 'fiscalia';
+  state.timer.remaining = parseInt(document.getElementById('timerSeconds').value) || 60;
 }
 
 // ---------- CARD RENDERING ----------
@@ -497,8 +508,8 @@ function renderSlots(){
 function cancelFiscaliaCard(){
   state.cardInPlay = null;
   state.pendingD = null;
-  pauseTimer();
   renderAll();
+  startPhaseTimer('fiscalia');
 }
 
 function renderLP(){
@@ -536,17 +547,29 @@ function showToast(mensaje, side){
   toastTimeoutId = setTimeout(()=>{ toast.classList.remove('show'); }, 5000);
 }
 
+// ---------- MINI MESSAGE (junto a la mano de Defensa) ----------
+let miniMsgTimeoutId = null;
+function showMiniMessage(mensaje){
+  const mini = document.getElementById('miniMsg');
+  mini.textContent = mensaje;
+  mini.classList.add('show');
+  if(miniMsgTimeoutId) clearTimeout(miniMsgTimeoutId);
+  miniMsgTimeoutId = setTimeout(()=>{ mini.classList.remove('show'); }, 2500);
+}
+
 // ---------- GAME ACTIONS ----------
 function playFiscaliaCard(id){
   if(state.cardInPlay) return;
+  pauseTimer();
   state.cardInPlay = id;
-  resetTimerDisplay();
   renderAll();
+  startPhaseTimer('defensa');
 }
 
 function chooseDefenseCard(dId){
   const fId = state.cardInPlay;
   if(!fId) return;
+  pauseTimer(); // el temporizador de Defensa se detiene apenas elige una carta
   const f = FISCALIA.find(c=>c.id===fId);
   const d = DEFENSA.find(c=>c.id===dId);
 
@@ -554,7 +577,7 @@ function chooseDefenseCard(dId){
     // Carta equivocada: no aplica contra esta prueba, penaliza pero no consume la carta ni termina el turno
     state.lpDefensa -= PENALIZACION_EQUIVOCACION;
     addLog(`<span class="tag intact">NO APLICA</span> "${d.nombre}" no neutraliza "${f.nombre}" (vulnerabilidad distinta). Defensa -${PENALIZACION_EQUIVOCACION} LP por elección incorrecta.`);
-    showToast(`❌ Defensa -${PENALIZACION_EQUIVOCACION} LP: "${d.nombre}" no es la objeción correcta contra "${f.nombre}".`, 'azul');
+    showMiniMessage(`❌ "${d.nombre}" no aplica aquí — Defensa -${PENALIZACION_EQUIVOCACION} LP`);
     renderLP();
     checkAutoVerdict();
     return;
@@ -581,6 +604,7 @@ function cancelDefenseChoice(){
   state.pendingD = null;
   renderSlots();
   renderDefensaMano();
+  startPhaseTimer('defensa');
 }
 
 function confirmObjection(valid){
@@ -638,7 +662,7 @@ function confirmObjection(valid){
 
   state.cardInPlay = null; state.pendingD = null;
   renderAll();
-  checkAutoVerdict();
+  if(!checkAutoVerdict()) startPhaseTimer('fiscalia');
 }
 
 function resolveNoObjection(){
@@ -653,7 +677,7 @@ function resolveNoObjection(){
   showToast(`❌ Defensa -${f.atk} LP: no se objetó a tiempo "${f.nombre}", quedó como ataque directo sin bloqueo.`, 'azul');
   state.cardInPlay = null;
   renderAll();
-  checkAutoVerdict();
+  if(!checkAutoVerdict()) startPhaseTimer('fiscalia');
 }
 
 function checkAutoVerdict(){
@@ -662,7 +686,9 @@ function checkAutoVerdict(){
   const anclasRotas = anclas.filter(c=>state.fiscalia[c.id].status==='neutralized').length;
   if(anclasRotas>=2 || allResolved || state.lpFiscalia<=0 || state.lpDefensa<=0){
     showVerdict();
+    return true;
   }
+  return false;
 }
 
 // ---------- TIMER ----------
@@ -675,11 +701,20 @@ function updateTimerDisplay(){
   const pct = Math.max(0, (t.remaining/t.seconds)*100);
   fill.style.width = pct+'%';
   fill.style.background = pct>50? 'var(--verde)' : pct>20? 'var(--amarillo)' : 'var(--rojo)';
+  const label = document.getElementById('timerPhaseLabel');
+  if(label) label.textContent = t.phase==='defensa' ? '🔵 Tiempo de Defensa para objetar' : '🔴 Tiempo de Fiscalía para elegir carta';
 }
 
-function startTimer(){
-  if(!state.cardInPlay){ alert('Primero juega una carta de Fiscalía.'); return; }
-  if(state.timer.running) return;
+function startPhaseTimer(phase){
+  pauseTimer();
+  state.timer.phase = phase;
+  state.timer.seconds = parseInt(document.getElementById('timerSeconds').value) || 60;
+  state.timer.remaining = state.timer.seconds;
+  updateTimerDisplay();
+  runTimerInterval();
+}
+
+function runTimerInterval(){
   state.timer.running = true;
   state.timer.intervalId = setInterval(()=>{
     state.timer.remaining--;
@@ -687,11 +722,20 @@ function startTimer(){
       state.timer.remaining=0;
       updateTimerDisplay();
       pauseTimer();
-      resolveNoObjection();
+      if(state.timer.phase==='defensa'){
+        resolveNoObjection();
+      } else {
+        showToast('⏰ Tiempo de Fiscalía agotado. Puede elegir su carta cuando quiera.', 'rojo');
+      }
       return;
     }
     updateTimerDisplay();
   },1000);
+}
+
+function startTimer(){
+  if(state.timer.running) return;
+  runTimerInterval();
 }
 
 function pauseTimer(){
@@ -702,7 +746,7 @@ function pauseTimer(){
 
 function resetTimerDisplay(){
   pauseTimer();
-  state.timer.seconds = parseInt(document.getElementById('timerSeconds').value) || 40;
+  state.timer.seconds = parseInt(document.getElementById('timerSeconds').value) || 60;
   state.timer.remaining = state.timer.seconds;
   updateTimerDisplay();
 }
@@ -744,10 +788,12 @@ function resetGame(){
   renderAll();
   updateTimerDisplay();
   document.getElementById('verdictBox').classList.remove('show');
+  startPhaseTimer('fiscalia');
 }
 
 function startGame(){
   document.getElementById('welcomeScreen').classList.add('hidden');
+  startPhaseTimer('fiscalia');
 }
 
 document.getElementById('timerSeconds').addEventListener('change', ()=>{ if(!state.cardInPlay) resetTimerDisplay(); });
