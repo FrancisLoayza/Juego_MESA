@@ -285,6 +285,7 @@
     <p id="modalBody"></p>
     <p style="font-size:.85rem; opacity:.8;">El profesor escucha el fundamento jurídico argumentado en voz alta y decide:</p>
     <div class="actions">
+      <button class="btn" onclick="cancelDefenseChoice()">🔙 Cancelar — Elegir otra carta</button>
       <button class="btn defense" onclick="confirmObjection(true)">✅ Fundamento válido — Resolver combate</button>
       <button class="btn primary" onclick="confirmObjection(false)">❌ Insuficiente — Ataque directo</button>
     </div>
@@ -579,6 +580,13 @@ function chooseDefenseCard(dId){
     Escuchen el argumento oral del estudiante y confirmen si el fundamento jurídico es correcto y suficiente.
   `;
   document.getElementById('modalBg').classList.add('show');
+}
+
+function cancelDefenseChoice(){
+  document.getElementById('modalBg').classList.remove('show');
+  state.pendingD = null;
+  renderSlots();
+  renderDefensaMano();
 }
 
 function confirmObjection(valid){
